@@ -1,0 +1,137 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package textsimilarity;
+
+import edu.cmu.lti.lexical_db.ILexicalDatabase;
+import edu.cmu.lti.lexical_db.NictWordNet;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Set;
+import edu.cmu.lti.ws4j.RelatednessCalculator;
+import edu.cmu.lti.ws4j.impl.HirstStOnge;
+import edu.cmu.lti.ws4j.impl.JiangConrath;
+import edu.cmu.lti.ws4j.impl.LeacockChodorow;
+import edu.cmu.lti.ws4j.impl.Lesk;
+import edu.cmu.lti.ws4j.impl.Lin;
+import edu.cmu.lti.ws4j.impl.Path;
+import edu.cmu.lti.ws4j.impl.Resnik;
+import edu.cmu.lti.ws4j.impl.WuPalmer;
+/**
+ *
+ * @author amin
+ */
+public class TextSimilarity {
+    public static double wordOrderSimilarity(String[] first, String[] second, double threshold){
+        double toReturn;
+        Set totalSet = new HashSet();
+        Set firstSet = new HashSet();
+        Set secondSet = new HashSet();
+        for (String first1 : first) {
+            totalSet.add(first1);
+            firstSet.add(first1);
+        }
+        for (String second1 : second) {
+            totalSet.add(second1);
+            secondSet.add(second1);
+        }
+
+        String all[] = new String[totalSet.size()];
+        totalSet.toArray(all);
+
+        double order1[] = new double[all.length];
+        double order2[] = new double[all.length];
+        double orderDiff = 0.0;
+        double orderSum  = 0.0;
+
+        for(int i=0; i<all.length; i++){
+            if(firstSet.contains(all[i]))
+                order1[i]=1;
+            else
+                for(int j=0;j<first.length;j++)
+                    if(wordSimilarity(first[j], all[i])>threshold){
+                        order1[i]=1;
+                        break;
+                    }
+            if(secondSet.contains(all[i]))
+                order2[i]=1;
+            else
+                for(int j=0;j<second.length;j++)
+                    if(wordSimilarity(second[j], all[i])>threshold){
+                        order2[i]=1;
+                        break;
+                    }
+            orderDiff += Math.pow(order1[i] - order2[i],2);
+            orderSum  += Math.pow(order1[i] + order2[i],2);
+        }
+
+        double negScore = Math.sqrt(orderDiff)/Math.sqrt(orderSum);
+        toReturn = (1.0-negScore);
+        return toReturn;
+    }
+    
+    public static String[] preProcess(String s){
+        String[] toReturn=null;
+        char punctuationMarks[] = {',', '.', '?', '!', ':', ';', '"'};
+        s = s.trim();
+        s = s.toLowerCase();
+        for (int j=0; j<punctuationMarks.length; j++)
+            s = s.replace(punctuationMarks[j],' ');
+        toReturn=s.split(" +");
+        return toReturn;
+    }
+    
+    public static double wordSimilarity(String s1, String s2){
+        double toReturn=lin.calcRelatednessOfWords(s1, s2);
+        if (toReturn>1)
+            toReturn=1;
+        return toReturn;
+    }
+    
+    public static ILexicalDatabase wndb=new NictWordNet();
+    public static RelatednessCalculator lin=new Lin(wndb);
+    public static RelatednessCalculator wup=new WuPalmer(wndb);
+    public static RelatednessCalculator path=new Path(wndb);
+    public static RelatednessCalculator hirst=new HirstStOnge(wndb);
+    public static RelatednessCalculator jiang=new JiangConrath(wndb);
+    public static RelatednessCalculator lea=new LeacockChodorow(wndb);
+    public static RelatednessCalculator lesk=new Lesk(wndb);
+    public static RelatednessCalculator resnik=new Resnik(wndb);
+    
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        BufferedReader in1 = new BufferedReader(new FileReader("input1.txt"));
+        BufferedReader in2 = new BufferedReader(new FileReader("input2.txt"));
+        //PrintWriter out = new PrintWriter(new FileWriter("output.txt"));
+        //String[] s1={"potatoes","are","very","good"};
+        //String[] s2={"onions","are","not","better","than","potatoes"};
+        /*String s1="potatoes are very good";
+        String s2="onions are not better than potatoes";
+        String[] ss1=preProcess(s1);
+        String[] ss2=preProcess(s2);*/
+        
+        //System.out.println(wordOrderSimilarity(ss1,ss2,1));
+/*        String s1="apple";
+        String s2="potato";
+        System.out.println(lin.calcRelatednessOfWords(s1, s2));
+        System.out.println(wup.calcRelatednessOfWords(s1, s2));
+        System.out.println(path.calcRelatednessOfWords(s1, s2));
+        System.out.println(hirst.calcRelatednessOfWords(s1, s2));
+        System.out.println(jiang.calcRelatednessOfWords(s1, s2));
+        System.out.println(lea.calcRelatednessOfWords(s1, s2));
+        System.out.println(lesk.calcRelatednessOfWords(s1, s2));
+        System.out.println(resnik.calcRelatednessOfWords(s1, s2));*/
+    }
+    
+}
